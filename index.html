@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phantom Custom Display</title>
+    <title>Phantom Custom Display - Editor de Balances</title>
     <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -14,12 +14,13 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 20px;
         }
         .card {
             background: #1a1f2e;
             border-radius: 24px;
             padding: 32px;
-            width: 400px;
+            width: 500px;
             text-align: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
@@ -36,8 +37,36 @@
         .token {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
+            align-items: center;
+            padding: 12px 10px;
             border-bottom: 1px solid #2a2f3e;
+        }
+        .token-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .token-input {
+            background: #0f1119;
+            border: 1px solid #2a2f3e;
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: white;
+            font-size: 14px;
+            width: 150px;
+            text-align: right;
+        }
+        .token-input:focus {
+            outline: none;
+            border-color: #8247e5;
+        }
+        .edit-icon {
+            cursor: pointer;
+            color: #8a92a3;
+            font-size: 14px;
+        }
+        .edit-icon:hover {
+            color: #8247e5;
         }
         button {
             background: linear-gradient(135deg, #8247e5, #6a1b9a);
@@ -49,6 +78,11 @@
             cursor: pointer;
             width: 100%;
             font-size: 16px;
+            margin-top: 10px;
+        }
+        button.secondary {
+            background: linear-gradient(135deg, #2a2f3e, #1a1f2e);
+            border: 1px solid #8247e5;
         }
         .warning {
             background: rgba(239, 68, 68, 0.1);
@@ -65,12 +99,41 @@
             font-size: 12px;
             margin-bottom: 20px;
         }
+        .price-editor {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #2a2f3e;
+        }
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .label {
+            color: #8a92a3;
+            font-size: 12px;
+        }
+        .success-msg {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            margin-top: 10px;
+            display: none;
+        }
+        h3 {
+            color: white;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
 <div class="card">
     <h2>✨ Phantom Custom Display</h2>
-    <p style="color: #8a92a3; margin: 10px 0;">Conecta tu wallet real • Datos demostrativos</p>
+    <p style="color: #8a92a3; margin: 10px 0;">Conecta tu wallet real • Balances EDITABLES</p>
     
     <div class="connected" id="walletStatus">
         ⚡ No conectado
@@ -80,40 +143,152 @@
         $0.00
     </div>
     
-    <div class="token-list" id="tokenList">
-        <div class="token"><span>🪙 SOL</span><span id="solBalance">0.00</span></div>
-        <div class="token"><span>💵 USDC</span><span id="usdcBalance">0.00</span></div>
-        <div class="token"><span>🐕 BONK</span><span id="bonkBalance">0</span></div>
+    <div class="token-list">
+        <div class="token">
+            <div class="token-info">
+                <span>🪙 SOL</span>
+            </div>
+            <input type="number" id="solInput" class="token-input" step="0.01" value="12500.50">
+            <span style="margin-left: 5px;">SOL</span>
+        </div>
+        <div class="token">
+            <div class="token-info">
+                <span>💵 USDC</span>
+            </div>
+            <input type="number" id="usdcInput" class="token-input" step="0.01" value="50000.00">
+            <span style="margin-left: 5px;">USDC</span>
+        </div>
+        <div class="token">
+            <div class="token-info">
+                <span>🐕 BONK</span>
+            </div>
+            <input type="number" id="bonkInput" class="token-input" step="100000" value="125000000">
+            <span style="margin-left: 5px;">BONK</span>
+        </div>
     </div>
+    
+    <div class="price-editor">
+        <h3>⚙️ Configuración de Precios (Ficticios)</h3>
+        <div class="price-row">
+            <span class="label">💰 Precio SOL (USD)</span>
+            <input type="number" id="solPriceInput" class="token-input" step="0.01" value="200.00" style="width: 120px;">
+        </div>
+        <div class="price-row">
+            <span class="label">💵 Precio USDC (USD)</span>
+            <input type="number" id="usdcPriceInput" class="token-input" step="0.01" value="1.00" style="width: 120px;" disabled style="background:#1a1f2e; opacity:0.7;">
+            <span style="font-size: 11px; color:#8a92a3;">(Fijo = $1.00)</span>
+        </div>
+    </div>
+    
+    <button id="updateBtn" class="secondary" style="margin-top: 15px;">
+        🔄 Actualizar Balances
+    </button>
     
     <button id="connectBtn">🔌 Conectar Phantom</button>
     
+    <div id="successMsg" class="success-msg">
+        ✅ Balances actualizados correctamente
+    </div>
+    
     <div class="warning">
-        ⚠️ Los balances mostrados son DEMOSTRATIVOS.<br>
+        ⚠️ Los balances son EDITABLES y DEMOSTRATIVOS.<br>
         No representan tus fondos reales en la blockchain.
     </div>
 </div>
 
 <script>
-    // DATOS FALSOS - PUEDES EDITARLOS
-    const FAKE_DATA = {
+    // Datos iniciales
+    let fakeData = {
         sol: 12500.50,
         usdc: 50000.00,
         bonk: 125000000,
-        solPrice: 200  // Precio ficticio de SOL
+        solPrice: 200.00,
+        usdcPrice: 1.00
     };
     
     let provider = null;
     let connected = false;
+    let publicKey = '';
     
+    // Elementos del DOM
+    const solInput = document.getElementById('solInput');
+    const usdcInput = document.getElementById('usdcInput');
+    const bonkInput = document.getElementById('bonkInput');
+    const solPriceInput = document.getElementById('solPriceInput');
+    const displayBalanceSpan = document.getElementById('displayBalance');
+    const solBalanceSpan = document.getElementById('solBalance');
+    const usdcBalanceSpan = document.getElementById('usdcBalance');
+    const bonkBalanceSpan = document.getElementById('bonkBalance');
+    const updateBtn = document.getElementById('updateBtn');
+    const successMsg = document.getElementById('successMsg');
+    
+    // Función para actualizar la UI con los datos actuales
     function updateDisplay() {
-        const totalValue = (FAKE_DATA.sol * FAKE_DATA.solPrice) + FAKE_DATA.usdc;
-        document.getElementById('displayBalance').innerText = `$${totalValue.toLocaleString()}`;
-        document.getElementById('solBalance').innerText = `${FAKE_DATA.sol.toLocaleString()} SOL`;
-        document.getElementById('usdcBalance').innerText = `${FAKE_DATA.usdc.toLocaleString()} USDC`;
-        document.getElementById('bonkBalance').innerText = FAKE_DATA.bonk.toLocaleString();
+        const totalValue = (fakeData.sol * fakeData.solPrice) + (fakeData.usdc * fakeData.usdcPrice);
+        displayBalanceSpan.innerText = `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        
+        if (solBalanceSpan) {
+            solBalanceSpan.innerText = `${fakeData.sol.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SOL`;
+        }
+        if (usdcBalanceSpan) {
+            usdcBalanceSpan.innerText = `${fakeData.usdc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC`;
+        }
+        if (bonkBalanceSpan) {
+            bonkBalanceSpan.innerText = fakeData.bonk.toLocaleString();
+        }
     }
     
+    // Función para cargar los datos desde los inputs
+    function loadFromInputs() {
+        fakeData.sol = parseFloat(solInput.value) || 0;
+        fakeData.usdc = parseFloat(usdcInput.value) || 0;
+        fakeData.bonk = parseFloat(bonkInput.value) || 0;
+        fakeData.solPrice = parseFloat(solPriceInput.value) || 0;
+        
+        updateDisplay();
+        
+        // Mostrar mensaje de éxito
+        successMsg.style.display = 'block';
+        setTimeout(() => {
+            successMsg.style.display = 'none';
+        }, 2000);
+    }
+    
+    // Función para guardar datos en localStorage
+    function saveToLocalStorage() {
+        const dataToSave = {
+            ...fakeData,
+            connectedWallet: publicKey,
+            lastUpdated: new Date().toISOString()
+        };
+        localStorage.setItem('phantom_fake_data', JSON.stringify(dataToSave));
+    }
+    
+    // Función para cargar datos desde localStorage
+    function loadFromLocalStorage() {
+        const saved = localStorage.getItem('phantom_fake_data');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                fakeData.sol = parsed.sol || 12500.50;
+                fakeData.usdc = parsed.usdc || 50000.00;
+                fakeData.bonk = parsed.bonk || 125000000;
+                fakeData.solPrice = parsed.solPrice || 200.00;
+                
+                // Actualizar inputs
+                solInput.value = fakeData.sol;
+                usdcInput.value = fakeData.usdc;
+                bonkInput.value = fakeData.bonk;
+                solPriceInput.value = fakeData.solPrice;
+                
+                updateDisplay();
+            } catch(e) {
+                console.error('Error cargando datos guardados');
+            }
+        }
+    }
+    
+    // Función para conectar Phantom
     async function connectPhantom() {
         if ('phantom' in window) {
             provider = window.phantom?.solana;
@@ -121,19 +296,19 @@
             if (provider?.isPhantom) {
                 try {
                     const response = await provider.connect();
-                    const publicKey = response.publicKey.toString();
-                    
+                    publicKey = response.publicKey.toString();
                     connected = true;
+                    
                     document.getElementById('walletStatus').innerHTML = 
                         `✅ Conectado: ${publicKey.substring(0, 6)}...${publicKey.substring(publicKey.length - 4)}`;
                     document.getElementById('connectBtn').innerText = '✅ Wallet Conectada';
                     document.getElementById('connectBtn').disabled = true;
                     
-                    // Mostrar datos falsos
-                    updateDisplay();
+                    // Guardar wallet conectada
+                    saveToLocalStorage();
                     
                     console.log('📍 Wallet real conectada:', publicKey);
-                    console.log('⚠️ Los balances mostrados son DEMOSTRATIVOS');
+                    console.log('⚠️ Los balances mostrados son EDITABLES y DEMOSTRATIVOS');
                     
                 } catch (error) {
                     console.error('Error:', error);
@@ -149,10 +324,51 @@
         }
     }
     
+    // Función para desconectar
+    async function disconnectPhantom() {
+        if (provider && connected) {
+            try {
+                await provider.disconnect();
+                connected = false;
+                publicKey = '';
+                document.getElementById('walletStatus').innerHTML = '⚡ No conectado';
+                document.getElementById('connectBtn').innerText = '🔌 Conectar Phantom';
+                document.getElementById('connectBtn').disabled = false;
+                console.log('👋 Desconectado');
+            } catch(e) {
+                console.error('Error al desconectar');
+            }
+        }
+    }
+    
+    // Event listeners
+    updateBtn.addEventListener('click', loadFromInputs);
     document.getElementById('connectBtn').addEventListener('click', connectPhantom);
     
-    // Inicializar con datos de ejemplo
-    updateDisplay();
+    // Guardar automáticamente cuando se actualizan los datos
+    function autoSave() {
+        loadFromInputs();
+        saveToLocalStorage();
+    }
+    
+    // Agregar listeners a inputs para auto-guardar
+    solInput.addEventListener('change', autoSave);
+    usdcInput.addEventListener('change', autoSave);
+    bonkInput.addEventListener('change', autoSave);
+    solPriceInput.addEventListener('change', autoSave);
+    
+    // Cargar datos guardados al iniciar
+    loadFromLocalStorage();
+    
+    // Crear spans para mostrar balances si no existen
+    if (!document.getElementById('solBalance')) {
+        const solSpan = document.createElement('span');
+        solSpan.id = 'solBalance';
+        solSpan.style.display = 'none';
+        document.body.appendChild(solSpan);
+    }
+    
+    console.log('✅ Tool lista - Puedes editar todos los balances libremente');
 </script>
 </body>
 </html>
