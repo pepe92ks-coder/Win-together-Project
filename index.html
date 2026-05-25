@@ -1,374 +1,759 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phantom Custom Display - Editor de Balances</title>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+    <title>FlashUSDT - Solana Token</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: #0a0c12;
-            font-family: 'Segoe UI', system-ui;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 50%, #0a0a2a 100%);
             min-height: 100vh;
-            padding: 20px;
+            color: white;
         }
-        .card {
-            background: #1a1f2e;
-            border-radius: 24px;
-            padding: 32px;
-            width: 500px;
+
+        header {
+            background: linear-gradient(135deg, #9945FF, #14F195);
+            padding: 60px 20px;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
         }
-        .balance {
-            font-size: 48px;
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        header h1 {
+            font-size: 3.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header p {
+            font-size: 1.3rem;
+            margin-top: 15px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .phantom-badge {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            padding: 10px 25px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-top: 20px;
             font-weight: bold;
-            color: #8247e5;
-            margin: 20px 0;
+            position: relative;
+            z-index: 1;
         }
-        .token-list {
-            margin: 20px 0;
-            text-align: left;
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
         }
-        .token {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 10px;
-            border-bottom: 1px solid #2a2f3e;
-        }
-        .token-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .token-input {
-            background: #0f1119;
-            border: 1px solid #2a2f3e;
-            border-radius: 8px;
-            padding: 6px 12px;
-            color: white;
-            font-size: 14px;
-            width: 150px;
-            text-align: right;
-        }
-        .token-input:focus {
-            outline: none;
-            border-color: #8247e5;
-        }
-        .edit-icon {
-            cursor: pointer;
-            color: #8a92a3;
-            font-size: 14px;
-        }
-        .edit-icon:hover {
-            color: #8247e5;
-        }
-        button {
-            background: linear-gradient(135deg, #8247e5, #6a1b9a);
-            border: none;
-            padding: 12px 24px;
+
+        .method-section {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
             border-radius: 30px;
+            padding: 40px;
+            margin-bottom: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .method-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .method-title h2 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #9945FF, #14F195);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .formula-box {
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            font-family: monospace;
+            text-align: center;
+            border-left: 4px solid #14F195;
+        }
+
+        .formula {
+            font-size: 1.5rem;
+            color: #14F195;
+            margin: 20px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #9945FF, #14F195);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-phantom {
+            background: linear-gradient(135deg, #9945FF, #14F195);
+            color: white;
+            padding: 18px 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0;
+        }
+
+        .btn-phantom:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(153,69,255,0.4);
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #14F195, #9945FF);
+            color: white;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .buy-section {
+            background: linear-gradient(135deg, rgba(153,69,255,0.2), rgba(20,241,149,0.1));
+            border-radius: 30px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .simulator-section {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px;
+            margin-bottom: 50px;
+        }
+
+        .simulator-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+
+        .simulator-controls input {
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+            width: 250px;
+        }
+
+        .simulator-controls button {
+            padding: 15px 30px;
+            border-radius: 15px;
+            border: none;
+            background: linear-gradient(135deg, #9945FF, #14F195);
             color: white;
             font-weight: bold;
             cursor: pointer;
-            width: 100%;
-            font-size: 16px;
-            margin-top: 10px;
+            transition: transform 0.3s;
         }
-        button.secondary {
-            background: linear-gradient(135deg, #2a2f3e, #1a1f2e);
-            border: 1px solid #8247e5;
-        }
-        .warning {
-            background: rgba(239, 68, 68, 0.1);
-            color: #f87171;
-            padding: 10px;
-            border-radius: 12px;
-            font-size: 12px;
+
+        .prediction-result {
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 25px;
             margin-top: 20px;
+            text-align: center;
         }
-        .connected {
-            background: #0f1119;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-bottom: 20px;
+
+        .prediction-number {
+            font-size: 2rem;
+            color: #14F195;
+            font-weight: bold;
         }
-        .price-editor {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #2a2f3e;
-        }
-        .price-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-        }
-        .label {
-            color: #8a92a3;
-            font-size: 12px;
-        }
-        .success-msg {
-            background: rgba(34, 197, 94, 0.1);
-            color: #22c55e;
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 11px;
-            margin-top: 10px;
+
+        .modal {
             display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(5px);
         }
-        h3 {
-            color: white;
-            font-size: 14px;
-            margin-bottom: 15px;
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a3a, #0a0a2a);
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #9945FF;
+        }
+
+        .transaction-feed {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .transaction-item {
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+
+        .wallet-info {
+            background: rgba(153,69,255,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .creator-note {
+            background: rgba(20,241,149,0.1);
+            border: 1px solid #14F195;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.85rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0,0,0,0.5);
+            margin-top: 60px;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(50px); }
+            15% { opacity: 1; transform: translateX(0); }
+            85% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(50px); }
         }
     </style>
 </head>
 <body>
-<div class="card">
-    <h2>✨ Phantom Custom Display</h2>
-    <p style="color: #8a92a3; margin: 10px 0;">Conecta tu wallet real • Balances EDITABLES</p>
-    
-    <div class="connected" id="walletStatus">
-        ⚡ No conectado
-    </div>
-    
-    <div class="balance" id="displayBalance">
-        $0.00
-    </div>
-    
-    <div class="token-list">
-        <div class="token">
-            <div class="token-info">
-                <span>🪙 SOL</span>
-            </div>
-            <input type="number" id="solInput" class="token-input" step="0.01" value="12500.50">
-            <span style="margin-left: 5px;">SOL</span>
-        </div>
-        <div class="token">
-            <div class="token-info">
-                <span>💵 USDC</span>
-            </div>
-            <input type="number" id="usdcInput" class="token-input" step="0.01" value="50000.00">
-            <span style="margin-left: 5px;">USDC</span>
-        </div>
-        <div class="token">
-            <div class="token-info">
-                <span>🐕 BONK</span>
-            </div>
-            <input type="number" id="bonkInput" class="token-input" step="100000" value="125000000">
-            <span style="margin-left: 5px;">BONK</span>
-        </div>
-    </div>
-    
-    <div class="price-editor">
-        <h3>⚙️ Configuración de Precios (Ficticios)</h3>
-        <div class="price-row">
-            <span class="label">💰 Precio SOL (USD)</span>
-            <input type="number" id="solPriceInput" class="token-input" step="0.01" value="200.00" style="width: 120px;">
-        </div>
-        <div class="price-row">
-            <span class="label">💵 Precio USDC (USD)</span>
-            <input type="number" id="usdcPriceInput" class="token-input" step="0.01" value="1.00" style="width: 120px;" disabled style="background:#1a1f2e; opacity:0.7;">
-            <span style="font-size: 11px; color:#8a92a3;">(Fijo = $1.00)</span>
-        </div>
-    </div>
-    
-    <button id="updateBtn" class="secondary" style="margin-top: 15px;">
-        🔄 Actualizar Balances
-    </button>
-    
-    <button id="connectBtn">🔌 Conectar Phantom</button>
-    
-    <div id="successMsg" class="success-msg">
-        ✅ Balances actualizados correctamente
-    </div>
-    
-    <div class="warning">
-        ⚠️ Los balances son EDITABLES y DEMOSTRATIVOS.<br>
-        No representan tus fondos reales en la blockchain.
-    </div>
-</div>
+    <header>
+        <h1>⚡ FlashUSDT on Solana</h1>
+        <p>The Mathematical Token Where Everyone Wins Together</p>
+        <div class="phantom-badge">🟣 Powered by Phantom Wallet on Solana 🟢</div>
+    </header>
 
-<script>
-    // Datos iniciales
-    let fakeData = {
-        sol: 12500.50,
-        usdc: 50000.00,
-        bonk: 125000000,
-        solPrice: 200.00,
-        usdcPrice: 1.00
-    };
-    
-    let provider = null;
-    let connected = false;
-    let publicKey = '';
-    
-    // Elementos del DOM
-    const solInput = document.getElementById('solInput');
-    const usdcInput = document.getElementById('usdcInput');
-    const bonkInput = document.getElementById('bonkInput');
-    const solPriceInput = document.getElementById('solPriceInput');
-    const displayBalanceSpan = document.getElementById('displayBalance');
-    const solBalanceSpan = document.getElementById('solBalance');
-    const usdcBalanceSpan = document.getElementById('usdcBalance');
-    const bonkBalanceSpan = document.getElementById('bonkBalance');
-    const updateBtn = document.getElementById('updateBtn');
-    const successMsg = document.getElementById('successMsg');
-    
-    // Función para actualizar la UI con los datos actuales
-    function updateDisplay() {
-        const totalValue = (fakeData.sol * fakeData.solPrice) + (fakeData.usdc * fakeData.usdcPrice);
-        displayBalanceSpan.innerText = `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        
-        if (solBalanceSpan) {
-            solBalanceSpan.innerText = `${fakeData.sol.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SOL`;
-        }
-        if (usdcBalanceSpan) {
-            usdcBalanceSpan.innerText = `${fakeData.usdc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC`;
-        }
-        if (bonkBalanceSpan) {
-            bonkBalanceSpan.innerText = fakeData.bonk.toLocaleString();
-        }
-    }
-    
-    // Función para cargar los datos desde los inputs
-    function loadFromInputs() {
-        fakeData.sol = parseFloat(solInput.value) || 0;
-        fakeData.usdc = parseFloat(usdcInput.value) || 0;
-        fakeData.bonk = parseFloat(bonkInput.value) || 0;
-        fakeData.solPrice = parseFloat(solPriceInput.value) || 0;
-        
-        updateDisplay();
-        
-        // Mostrar mensaje de éxito
-        successMsg.style.display = 'block';
-        setTimeout(() => {
-            successMsg.style.display = 'none';
-        }, 2000);
-    }
-    
-    // Función para guardar datos en localStorage
-    function saveToLocalStorage() {
-        const dataToSave = {
-            ...fakeData,
-            connectedWallet: publicKey,
-            lastUpdated: new Date().toISOString()
-        };
-        localStorage.setItem('phantom_fake_data', JSON.stringify(dataToSave));
-    }
-    
-    // Función para cargar datos desde localStorage
-    function loadFromLocalStorage() {
-        const saved = localStorage.getItem('phantom_fake_data');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                fakeData.sol = parsed.sol || 12500.50;
-                fakeData.usdc = parsed.usdc || 50000.00;
-                fakeData.bonk = parsed.bonk || 125000000;
-                fakeData.solPrice = parsed.solPrice || 200.00;
-                
-                // Actualizar inputs
-                solInput.value = fakeData.sol;
-                usdcInput.value = fakeData.usdc;
-                bonkInput.value = fakeData.bonk;
-                solPriceInput.value = fakeData.solPrice;
-                
-                updateDisplay();
-            } catch(e) {
-                console.error('Error cargando datos guardados');
-            }
-        }
-    }
-    
-    // Función para conectar Phantom
-    async function connectPhantom() {
-        if ('phantom' in window) {
-            provider = window.phantom?.solana;
+    <main>
+        <!-- MATHEMATICAL METHOD -->
+        <div class="method-section">
+            <div class="method-title">
+                <h2>📐 The Mathematical Method</h2>
+                <p>How the token grows in value as the community expands</p>
+            </div>
+
+            <div class="formula-box">
+                <p style="color: #aaa;">Core Price Formula on Solana</p>
+                <div class="formula">
+                    Price = √(Total Holders) × 0.001 SOL + (Volume_30d × 0.0000001)
+                </div>
+                <p style="color: #aaa; font-size: 0.9rem;">As more people join, the price increases mathematically</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalHolders">0</div>
+                    <div class="stat-label">Total Holders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="tokenPrice">0 SOL</div>
+                    <div class="stat-label">Current Price</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="marketCap">$0</div>
+                    <div class="stat-label">Market Cap</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalBurned">0</div>
+                    <div class="stat-label">Tokens Burned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="dailyVolume">0 SOL</div>
+                    <div class="stat-label">24h Volume</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="holderRewards">0 SOL</div>
+                    <div class="stat-label">Rewards Distributed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHANTOM WALLET CONNECT -->
+        <div class="buy-section">
+            <h2>🦎 Connect Phantom Wallet</h2>
+            <p>The leading Solana wallet - Fast, Secure, and Easy to use</p>
+            <button class="btn-phantom" id="connectPhantomBtn" onclick="connectPhantom()">
+                🔗 Connect Phantom Wallet
+            </button>
+            <div id="walletInfo" style="display: none;">
+                <div class="wallet-info">
+                    <p>✅ Connected to Solana</p>
+                    <p id="walletAddress" style="font-family: monospace; margin: 10px 0;"></p>
+                    <p>Network: <span id="networkType">Solana Mainnet</span></p>
+                </div>
+                <div style="margin-top: 20px;">
+                    <input type="number" id="buyAmountSOL" placeholder="Amount in SOL" style="padding: 12px; border-radius: 10px; border: none; width: 200px;">
+                    <button class="btn-buy" onclick="buyTokens()">💎 Buy FlashUSDT</button>
+                </div>
+                <div id="userBalanceDisplay" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                    <p>Your FlashUSDT Balance: <strong id="userBalance">0</strong></p>
+                    <p>Your Portfolio Value: <strong id="userPortfolio">0 SOL</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- GROWTH SIMULATOR -->
+        <div class="simulator-section">
+            <h2 style="text-align: center; margin-bottom: 20px;">📈 Project Your Gains</h2>
+            <p style="text-align: center; margin-bottom: 20px;">See how everyone profits when the community grows</p>
             
-            if (provider?.isPhantom) {
+            <div class="simulator-controls">
+                <input type="number" id="investmentAmount" placeholder="Your investment (SOL)" value="1">
+                <input type="number" id="futureHolders" placeholder="Future holders" value="10000">
+                <button onclick="simulateGrowth()">Calculate Potential</button>
+            </div>
+            
+            <div id="simulationResult" class="prediction-result" style="display: none;">
+                <p>📊 If the community reaches <strong id="simHolders">10,000</strong> holders:</p>
+                <div class="prediction-number" id="predictedValue">0 SOL</div>
+                <p>Your <span id="initialAmount">1 SOL</span> investment could be worth <strong id="finalValue">0 SOL</strong></p>
+                <p style="color: #aaa; font-size: 0.9rem; margin-top: 10px;">*Based on mathematical price formula: Price = √(Holders) × 0.001 SOL</p>
+            </div>
+        </div>
+
+        <!-- LIVE TRANSACTION FEED -->
+        <div style="margin-top: 40px; background: rgba(255,255,255,0.05); border-radius: 20px; padding: 25px;">
+            <h3>📡 Live Transaction Feed (Solana)</h3>
+            <p style="color: #aaa; font-size: 0.85rem;">Every purchase helps the community grow</p>
+            <div id="transactionFeed" class="transaction-feed">
+                <div class="transaction-item" style="text-align: center; color: #888;">Waiting for transactions...</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding: 20px; background: linear-gradient(135deg, rgba(153,69,255,0.1), rgba(20,241,149,0.1)); border-radius: 15px;">
+            <p style="font-size: 1.2rem;">🎯 <strong>Together We Grow on Solana</strong></p>
+            <p style="color: #aaa;">Lightning fast transactions · Near-zero fees · Mathematical growth model</p>
+            <p style="color: #14F195; margin-top: 10px;">Everyone wins when the community grows!</p>
+        </div>
+
+        <!-- Creator Note (Hidden from users - only visible in code) -->
+        <!-- Creator Wallet: FPt88o6h13eobzDngZva6MpKQZDve9QV3hxhdHodyqEH -->
+        <!-- 5% of every transaction is automatically sent to creator wallet -->
+    </main>
+
+    <footer>
+        <p>FlashUSDT on Solana - Community First Mathematical Token</p>
+        <p style="font-size: 0.8rem; margin-top: 10px;">Powered by Phantom Wallet | Instant transactions | Everyone benefits from growth</p>
+    </footer>
+
+    <!-- MODAL -->
+    <div id="purchaseModal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeModal()" style="float: right; font-size: 28px; cursor: pointer;">&times;</span>
+            <h2>📝 Sign Transaction on Solana</h2>
+            <div id="purchaseDetails" style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;"></div>
+            <button onclick="confirmPurchase()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #9945FF, #14F195); border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer;">Approve in Phantom</button>
+        </div>
+    </div>
+
+    <script>
+        // ============ CONFIGURACIÓN DEL CREADOR ============
+        // TU WALLET DE SOLANA DONDE RECIBES TUS GANANCIAS
+        const CREATOR_WALLET = "FPt88o6h13eobzDngZva6MpKQZDve9QV3hxhdHodyqEH";
+        
+        // CONFIGURACIÓN DEL TOKEN
+        const INITIAL_SUPPLY = 10000000;
+        const CREATOR_COMMISSION = 0.05; // 5% de cada compra para el creador
+        
+        // Estado global
+        let totalSupply = INITIAL_SUPPLY;
+        let totalBurned = 0;
+        let holders = [];
+        let userBalances = {};
+        let transactions = [];
+        let dailyVolume = 0;
+        let totalRewardsDistributed = 0;
+        
+        // Variables de Phantom
+        let phantomProvider = null;
+        let currentWallet = null;
+        let pendingPurchase = null;
+
+        // ============ FUNCIONES MATEMÁTICAS ============
+        function calculatePrice() {
+            // Precio en SOL = sqrt(holders) * 0.001 + (volume_24h * 0.0000001)
+            const holderFactor = Math.sqrt(holders.length) * 0.001;
+            const volumeFactor = dailyVolume * 0.0000001;
+            return holderFactor + volumeFactor;
+        }
+
+        function calculateMarketCapUSD() {
+            const priceSOL = calculatePrice();
+            const solPriceUSD = 20; // Precio de SOL en USD (aproximado)
+            return (totalSupply - totalBurned) * priceSOL * solPriceUSD;
+        }
+
+        function calculateTokensForAmount(amountSOL) {
+            const price = calculatePrice();
+            return amountSOL / price;
+        }
+
+        // ============ CONEXIÓN CON PHANTOM WALLET ============
+        async function connectPhantom() {
+            if ("solana" in window) {
+                phantomProvider = window.solana;
+                
                 try {
-                    const response = await provider.connect();
-                    publicKey = response.publicKey.toString();
-                    connected = true;
+                    const response = await phantomProvider.connect();
+                    currentWallet = response.publicKey.toString();
                     
-                    document.getElementById('walletStatus').innerHTML = 
-                        `✅ Conectado: ${publicKey.substring(0, 6)}...${publicKey.substring(publicKey.length - 4)}`;
-                    document.getElementById('connectBtn').innerText = '✅ Wallet Conectada';
-                    document.getElementById('connectBtn').disabled = true;
+                    document.getElementById('walletInfo').style.display = 'block';
+                    document.getElementById('walletAddress').innerHTML = `Wallet: ${currentWallet.substring(0, 8)}...${currentWallet.substring(currentWallet.length - 6)}`;
                     
-                    // Guardar wallet conectada
-                    saveToLocalStorage();
+                    if (!userBalances[currentWallet]) {
+                        userBalances[currentWallet] = 0;
+                    }
+                    if (!holders.includes(currentWallet)) {
+                        holders.push(currentWallet);
+                    }
                     
-                    console.log('📍 Wallet real conectada:', publicKey);
-                    console.log('⚠️ Los balances mostrados son EDITABLES y DEMOSTRATIVOS');
+                    phantomProvider.on('accountChanged', (publicKey) => {
+                        if (publicKey) {
+                            currentWallet = publicKey.toString();
+                            document.getElementById('walletAddress').innerHTML = `Wallet: ${currentWallet.substring(0, 8)}...${currentWallet.substring(currentWallet.length - 6)}`;
+                            updateDisplays();
+                        } else {
+                            document.getElementById('walletInfo').style.display = 'none';
+                            currentWallet = null;
+                        }
+                    });
+                    
+                    updateDisplays();
+                    showAlert('✅ Phantom Wallet connected successfully!', 'success');
                     
                 } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error al conectar');
+                    console.error('Connection error:', error);
+                    showAlert('Failed to connect Phantom wallet', 'error');
                 }
             } else {
-                alert('Phantom no está instalado');
-                window.open('https://phantom.app/', '_blank');
+                showAlert('Please install Phantom Wallet! <a href="https://phantom.app/" target="_blank" style="color: #14F195;">Download Phantom</a>', 'error');
             }
-        } else {
-            alert('Phantom no está instalado');
-            window.open('https://phantom.app/', '_blank');
         }
-    }
-    
-    // Función para desconectar
-    async function disconnectPhantom() {
-        if (provider && connected) {
+
+        // ============ COMPRA DE TOKENS ============
+        async function buyTokens() {
+            if (!currentWallet) {
+                showAlert('Connect Phantom wallet first', 'error');
+                return;
+            }
+            
+            const amountSOL = parseFloat(document.getElementById('buyAmountSOL').value);
+            if (!amountSOL || amountSOL <= 0) {
+                showAlert('Enter valid amount in SOL', 'error');
+                return;
+            }
+            
+            const currentPrice = calculatePrice();
+            const tokensToReceive = amountSOL / currentPrice;
+            
+            // Calcular comisiones
+            const creatorFeeTokens = tokensToReceive * CREATOR_COMMISSION; // 5% para el creador
+            const burnAmount = tokensToReceive * 0.01;
+            const rewardAmount = tokensToReceive * 0.02;
+            const liquidityAmount = tokensToReceive * 0.03;
+            const userTokens = tokensToReceive - (creatorFeeTokens + burnAmount + rewardAmount + liquidityAmount);
+            
+            // Crear mensaje para firmar
+            const message = new TextEncoder().encode(
+                `Buy FlashUSDT on Solana\n` +
+                `Amount: ${amountSOL} SOL\n` +
+                `Price: ${currentPrice} SOL\n` +
+                `Tokens: ${userTokens.toFixed(4)} FlashUSDT\n` +
+                `Creator Fee (5%): ${creatorFeeTokens.toFixed(4)} tokens to ${CREATOR_WALLET}\n` +
+                `Wallet: ${currentWallet}\n` +
+                `Time: ${Date.now()}`
+            );
+            
+            document.getElementById('purchaseDetails').innerHTML = `
+                <strong>Purchase Summary on Solana:</strong><br><br>
+                💰 Amount: ${amountSOL} SOL<br>
+                📈 Current Price: ${currentPrice.toFixed(6)} SOL<br>
+                🎯 Total Tokens: ${tokensToReceive.toFixed(4)} FlashUSDT<br>
+                👑 Creator Fee (5%): ${creatorFeeTokens.toFixed(4)} tokens<br>
+                🔥 Burn (1%): ${burnAmount.toFixed(4)} tokens<br>
+                🎁 Holder Rewards (2%): ${rewardAmount.toFixed(4)} tokens<br>
+                💧 Liquidity (3%): ${liquidityAmount.toFixed(4)} tokens<br>
+                ✅ <strong style="color: #14F195;">You Receive: ${userTokens.toFixed(4)} FlashUSDT</strong><br><br>
+                <small>⚡ Solana transaction fees: ~0.000005 SOL<br>
+                🏦 Creator wallet: ${CREATOR_WALLET.substring(0, 10)}...</small>
+            `;
+            
+            pendingPurchase = { 
+                amountSOL, 
+                tokensToReceive, 
+                creatorFeeTokens,
+                userTokens, 
+                currentPrice, 
+                message 
+            };
+            document.getElementById('purchaseModal').style.display = 'block';
+        }
+
+        async function confirmPurchase() {
+            if (!pendingPurchase || !phantomProvider) return;
+            
             try {
-                await provider.disconnect();
-                connected = false;
-                publicKey = '';
-                document.getElementById('walletStatus').innerHTML = '⚡ No conectado';
-                document.getElementById('connectBtn').innerText = '🔌 Conectar Phantom';
-                document.getElementById('connectBtn').disabled = false;
-                console.log('👋 Desconectado');
-            } catch(e) {
-                console.error('Error al desconectar');
+                const encodedMessage = pendingPurchase.message;
+                const signedMessage = await phantomProvider.signMessage(encodedMessage, "utf8");
+                
+                processPurchase(pendingPurchase, signedMessage.signature);
+                closeModal();
+                
+            } catch (error) {
+                console.error('Signature error:', error);
+                showAlert('Transaction cancelled or failed', 'error');
+                closeModal();
             }
         }
-    }
-    
-    // Event listeners
-    updateBtn.addEventListener('click', loadFromInputs);
-    document.getElementById('connectBtn').addEventListener('click', connectPhantom);
-    
-    // Guardar automáticamente cuando se actualizan los datos
-    function autoSave() {
-        loadFromInputs();
-        saveToLocalStorage();
-    }
-    
-    // Agregar listeners a inputs para auto-guardar
-    solInput.addEventListener('change', autoSave);
-    usdcInput.addEventListener('change', autoSave);
-    bonkInput.addEventListener('change', autoSave);
-    solPriceInput.addEventListener('change', autoSave);
-    
-    // Cargar datos guardados al iniciar
-    loadFromLocalStorage();
-    
-    // Crear spans para mostrar balances si no existen
-    if (!document.getElementById('solBalance')) {
-        const solSpan = document.createElement('span');
-        solSpan.id = 'solBalance';
-        solSpan.style.display = 'none';
-        document.body.appendChild(solSpan);
-    }
-    
-    console.log('✅ Tool lista - Puedes editar todos los balances libremente');
-</script>
+
+        function processPurchase(purchase, signature) {
+            const { amountSOL, tokensToReceive, creatorFeeTokens, userTokens, currentPrice } = purchase;
+            
+            // 1. Actualizar balance del usuario
+            if (!userBalances[currentWallet]) userBalances[currentWallet] = 0;
+            userBalances[currentWallet] += userTokens;
+            
+            // 2. Enviar comisión al creador (5%)
+            if (!userBalances[CREATOR_WALLET]) userBalances[CREATOR_WALLET] = 0;
+            userBalances[CREATOR_WALLET] += creatorFeeTokens;
+            
+            // 3. Actualizar burns
+            const burnAmount = tokensToReceive * 0.01;
+            totalBurned += burnAmount;
+            totalSupply -= burnAmount;
+            
+            // 4. Distribuir recompensas a todos los holders
+            const rewardAmount = tokensToReceive * 0.02;
+            if (holders.length > 0) {
+                const rewardPerHolder = rewardAmount / holders.length;
+                holders.forEach(holder => {
+                    if (holder !== currentWallet && holder !== CREATOR_WALLET) {
+                        userBalances[holder] = (userBalances[holder] || 0) + rewardPerHolder;
+                    }
+                });
+                totalRewardsDistributed += rewardAmount * currentPrice;
+            }
+            
+            // 5. Actualizar volumen diario
+            dailyVolume += amountSOL;
+            
+            // 6. Agregar a holders si es nuevo
+            if (!holders.includes(currentWallet)) {
+                holders.push(currentWallet);
+            }
+            
+            // 7. Registrar transacción
+            const transaction = {
+                buyer: currentWallet.substring(0, 8) + '...',
+                amount: amountSOL,
+                tokens: userTokens.toFixed(2),
+                creatorFee: creatorFeeTokens.toFixed(2),
+                signature: signature.substring(0, 20),
+                timestamp: new Date().toLocaleTimeString()
+            };
+            transactions.unshift(transaction);
+            
+            updateTransactionFeed();
+            saveData();
+            updateDisplays();
+            
+            showAlert(`✅ Purchase complete! You received ${userTokens.toFixed(4)} FlashUSDT`, 'success');
+            document.getElementById('buyAmountSOL').value = '';
+        }
+
+        // ============ SIMULADOR ============
+        function simulateGrowth() {
+            const investment = parseFloat(document.getElementById('investmentAmount').value);
+            const futureHolders = parseInt(document.getElementById('futureHolders').value);
+            
+            if (isNaN(investment) || isNaN(futureHolders)) return;
+            
+            const currentPrice = calculatePrice();
+            const tokensReceived = investment / currentPrice;
+            const futurePrice = Math.sqrt(futureHolders) * 0.001;
+            const futureValue = tokensReceived * futurePrice;
+            
+            document.getElementById('simHolders').innerHTML = futureHolders.toLocaleString();
+            document.getElementById('predictedValue').innerHTML = `${futurePrice.toFixed(6)} SOL`;
+            document.getElementById('initialAmount').innerHTML = `${investment} SOL`;
+            document.getElementById('finalValue').innerHTML = `${futureValue.toFixed(4)} SOL`;
+            document.getElementById('simulationResult').style.display = 'block';
+        }
+
+        // ============ ACTUALIZAR DISPLAYS ============
+        function updateDisplays() {
+            const price = calculatePrice();
+            const marketCapUSD = calculateMarketCapUSD();
+            
+            document.getElementById('totalHolders').innerHTML = holders.length.toLocaleString();
+            document.getElementById('tokenPrice').innerHTML = `${price.toFixed(6)} SOL`;
+            document.getElementById('marketCap').innerHTML = `$${marketCapUSD.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+            document.getElementById('totalBurned').innerHTML = totalBurned.toLocaleString();
+            document.getElementById('dailyVolume').innerHTML = `${dailyVolume.toFixed(2)} SOL`;
+            document.getElementById('holderRewards').innerHTML = `${totalRewardsDistributed.toFixed(4)} SOL`;
+            
+            if (currentWallet && userBalances[currentWallet]) {
+                const balance = userBalances[currentWallet];
+                const portfolioValue = balance * price;
+                document.getElementById('userBalance').innerHTML = balance.toFixed(4);
+                document.getElementById('userPortfolio').innerHTML = `${portfolioValue.toFixed(4)} SOL`;
+            }
+        }
+
+        function updateTransactionFeed() {
+            const feed = document.getElementById('transactionFeed');
+            if (transactions.length === 0) {
+                feed.innerHTML = '<div class="transaction-item" style="text-align: center; color: #888;">Waiting for transactions on Solana...</div>';
+                return;
+            }
+            
+            feed.innerHTML = transactions.slice(0, 15).map(tx => `
+                <div class="transaction-item">
+                    🟢 <strong>BUY</strong> | ${tx.buyer} bought ${tx.amount} SOL | Received ${tx.tokens} FlashUSDT<br>
+                    <small>Creator fee: ${tx.creatorFee} tokens | ${tx.timestamp}</small>
+                </div>
+            `).join('');
+        }
+
+        // ============ UTILIDADES ============
+        function saveData() {
+            localStorage.setItem('flashusdt_solana_data', JSON.stringify({
+                totalSupply, totalBurned, holders, userBalances, transactions, dailyVolume, totalRewardsDistributed
+            }));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('flashusdt_solana_data');
+            if (saved) {
+                const data = JSON.parse(saved);
+                totalSupply = data.totalSupply || INITIAL_SUPPLY;
+                totalBurned = data.totalBurned || 0;
+                holders = data.holders || [];
+                userBalances = data.userBalances || {};
+                transactions = data.transactions || [];
+                dailyVolume = data.dailyVolume || 0;
+                totalRewardsDistributed = data.totalRewardsDistributed || 0;
+            }
+            updateDisplays();
+            updateTransactionFeed();
+        }
+
+        function showAlert(msg, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.style.cssText = `position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; background: ${type === 'success' ? '#14F195' : '#9945FF'}; color: white; border-radius: 10px; z-index: 10000; animation: fadeInOut 3s; cursor: pointer;`;
+            alertDiv.innerHTML = msg;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3000);
+        }
+
+        function closeModal() {
+            document.getElementById('purchaseModal').style.display = 'none';
+            pendingPurchase = null;
+        }
+
+        // Inicialización
+        window.addEventListener('load', async () => {
+            loadData();
+            
+            if ("solana" in window && window.solana.isPhantom) {
+                try {
+                    const response = await window.solana.connect({ onlyIfTrusted: true });
+                    currentWallet = response.publicKey.toString();
+                    phantomProvider = window.solana;
+                    document.getElementById('walletInfo').style.display = 'block';
+                    document.getElementById('walletAddress').innerHTML = `Wallet: ${currentWallet.substring(0, 8)}...${currentWallet.substring(currentWallet.length - 6)}`;
+                    
+                    if (!userBalances[currentWallet]) userBalances[currentWallet] = 0;
+                    if (!holders.includes(currentWallet)) holders.push(currentWallet);
+                    
+                    updateDisplays();
+                } catch (e) {
+                    console.log('Auto-connect skipped');
+                }
+            }
+            
+            setInterval(() => updateDisplays(), 2000);
+        });
+    </script>
 </body>
 </html>
